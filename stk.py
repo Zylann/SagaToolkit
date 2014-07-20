@@ -9,6 +9,15 @@ import os
 
 
 # ------------------------------------------------------------------------------
+class Actor:
+
+	def __init__(self, name="", pseudo=""):
+		self.name = name
+		self.pseudo = pseudo
+
+
+# ------------------------------------------------------------------------------
+# \brief Top element of an audio production.
 class Saga:
 
 	def __init__(self):
@@ -16,21 +25,43 @@ class Saga:
 		self.episodes = []
 		self.characters = {}
 		self.characterAliases = {}
+		self.actors = []
 
 	def create_episode(self):
 		episode = Episode(self)
 		self.episodes.append(episode)
 		return episode
 
+	def get_character(nameOrAlias):
+		name = nameOrAlias
+		try:
+			name = self.characterAliases[nameOrAlias]
+		except KeyError:
+			pass
+		return self.characters[name]
+
 
 # ------------------------------------------------------------------------------
 class Episode:
 
 	def __init__(self, saga=None):
-		self.title = ""
-		self.scenes = []
 		self.saga = saga
+
+		self.title = ""
+
+		# List of all scenes in the episode.
+		# It can be empty, depending on how deep STK is told to go through.
+		# (It's also related to the parsing format)
+		self.scenes = []
+
+		# Name of the file this episode was taken from (without extension)
 		self.filename = ""
+
+		self.filetype = "txt"
+		self.number = 0
+
+		# Scene indexes at which a part starts (used for big, split episodes).
+		self.partIndexes = [0]
 
 	def create_scene(self):
 		scene = Scene(self)
@@ -39,6 +70,8 @@ class Episode:
 
 
 # ------------------------------------------------------------------------------
+# \brief a scene is the element that contains the actual action, statements etc.
+# any parent element (such as the episode) could be dynamic in the future.
 class Scene:
 
 	def __init__(self, episode=None):
@@ -73,10 +106,12 @@ class Character:
 		# Gender can be M, F or N
 		self.gender = "N"
 		self.saga = saga
+		# Main actor name
+		self.actorName = ""
 
 
 # ------------------------------------------------------------------------------
-class Exporter:
+class HtmlExporter:
 
 	def __init__(self):
 		# Templates
@@ -276,11 +311,11 @@ def read_all_file(src):
 
 
 # ------------------------------------------------------------------------------
-def main():
+def cli_main():
 	if len(sys.argv) == 3:
 		parser = MDParser()
 		parser.parse_file(sys.argv[1])
-		exporter = Exporter()
+		exporter = HtmlExporter()
 		exporter.export(parser.saga, sys.argv[2])
 
 	else:
@@ -289,5 +324,7 @@ def main():
 
 # ------------------------------------------------------------------------------
 
-main()
+if __name__ == '__main__':
+	cli_main()
+
 
