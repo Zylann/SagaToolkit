@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF8" />
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<title>épisode 42 : Le test de script!</title>
+	<style>
+		body {
+			font-family: Calibri, Helvetica, Verdana;
+			background: #888;
+		}
+		#content {
+			width: 550px;
+			margin: 32px auto 300px auto;
+			background: #fff;
+			padding: 32px 64px 32px 64px;
+			text-align: left;
+			-webkit-box-shadow: 7px 7px 5px 0px rgba(50, 50, 50, 0.5);
+			-moz-box-shadow: 7px 7px 5px 0px rgba(50, 50, 50, 0.5);
+			box-shadow: 7px 7px 5px 0px rgba(50, 50, 50, 0.5);
+		}
+		h1 {
+			font-size: 2em;
+			font-weight: normal;
+			border-bottom: 2px solid #aaa;
+		}
+		h2 {
+			font-size: 1.4em;
+			font-weight: bold;
+			border-bottom: 1px solid #aaa;
+			text-align: center;
+		}
+		h3 {
+			font-size: 1.2em;
+			font-weight: bold;
+			border-bottom: 1px solid #aaa;
+			text-align: center;
+		}
+		.charBlock {
+			padding: 4px 0px 4px 0px;
+			margin: 1px 0px 0px 0px;
+		}
+		.charBlock:hover {
+			background: #eee;
+		}
+		.charBlockHighlight {
+			background: #ffa;
+		}
+		.charBlockHighlight:hover {
+			background: #ff8;
+		}
+		.charHead {
+			padding: 0px 0px 0px 0px;
+			margin: 0px 0px 0px 0px;
+			font-weight: bold;
+		}
+		.charText {
+			padding: 0px 0px 0px 50px;
+			margin: 0px 0px 0px 0px;
+		}
+		.note {
+			font-style: italic;
+			font-weight: normal;
+			color: #888;
+		}
+	</style>
+</head>
+<body>
+
+	<div id="content">
+		<h2>Scène 1</h2>
+<div class="charBlock">
+	<p class="charHead">PRESIDENT</p>
+	<p class="charText"> Hello world !
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">INGENIEUR</p>
+	<p class="charText"> Whack?
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">PRESIDENT<span class="note">  surpris </span></p>
+	<p class="charText"> c'est quoi whack?
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">INGENIEUR<span class="note">  met sa main sur sa figure </span></p>
+	<p class="charText"> Haaaa, laissez tomber... (se retourne brusquement) hé !!
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">GENERAL<span class="note">  pour faire une blague </span></p>
+	<p class="charText"> héhé, je t'ai pris ton chapeau !
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">INGENIEUR<span class="note">  plat </span></p>
+	<p class="charText"> j'ai pas de chapeau.
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">GENERAL</p>
+	<p class="charText"> Ah. Tant pis, c'était juste pour tester le script.
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">INGENIEUR+PRESIDENT</p>
+	<p class="charText"> Le script?
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">NARRATEUR</p>
+	<p class="charText"> Bah oui, c'est pour ça que je vous fait dire que de la merde depuis le début, c'est pour que vous produisiez un maximum de texte pour que je puisse voir ce que ça rend ensuite !
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">TOUS</p>
+	<p class="charText"> Gné??
+</p>
+</div>
+<div class="charBlock">
+	<p class="charHead">NARRATEUR<span class="note">  blasé </span></p>
+	<p class="charText"> Bon. Oubliez ce que je viens de dire.
+</p>
+</div>
+<h2>Scène 2 : explication</h2>
+
+	</div>
+
+	<script id="interaction">
+
+		var statements = [];
+
+
+		function Statement(statementHTML) {
+			this.block = statementHTML
+			this.characterName = getCharacterName(statementHTML);
+		}
+		Statement.prototype = {
+			highlight: function (enable) {
+				if(enable) {
+					this.block.classList.add("charBlockHighlight");
+				}
+				else {
+					this.block.classList.remove("charBlockHighlight");
+				}
+			}
+		}
+
+
+		window.onload = function() {
+			parseContent();
+		}
+
+		function getCharacterName(statementHTML) {
+			var head = statementHTML.querySelector(".charHead");
+			var charName = head.firstChild.data;
+			return charName.trim();
+		}
+
+		function parseContent() {
+			var charBlocks = document.querySelectorAll("#content .charBlock")
+			console.log("Found " + charBlocks.length + " blocks");
+			for(var i = 0; i < charBlocks.length; ++i) {
+				var block = charBlocks[i];
+				block.addEventListener("click", onCharBlockClicked);
+				statements.push(new Statement(block));
+			}
+		}
+
+		function highlightCharacter(characterName) {
+			// TODO highlight occurences with a "+" in them
+			for(var i = 0; i < statements.length; ++i) {
+				var s = statements[i];
+				if(s.characterName == characterName) {
+					s.highlight(true);
+				}
+				else {
+					s.highlight(false);
+				}
+			}
+		}
+
+		function onCharBlockClicked() {
+			var block = this;
+			var characterName = getCharacterName(block);
+			highlightCharacter(characterName);
+		}
+
+	</script>
+</body>
+</html>
+
+

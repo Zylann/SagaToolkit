@@ -1,0 +1,101 @@
+/*
+Test pour le format ZMS,
+un format de script de pièce radiophonique 
+à la fois lisible et pratique à écrire sur un smartphone, d'après Zylann.
+*/
+
+/**
+// De la doc ! (et ça c'est un commentaire dans la doc!)
+
+Personnages:
+
+PRESIDENT
+---------
+Sexe: M
+Description: C'est le président. Voilà.
+
+INGENIEUR
+---------
+Sexe: M
+Description: C'est l'ingénieur et il est plus intelligent que le président.
+
+GENERAL
+---------
+Sexe: M
+Description: LOL !
+
+NARRATEUR
+---------
+Description: C'est le narrateur... voilà.
+Rien à dire de plus sur lui,
+si ce n'est qu'il aime les patates.
+
+**/
+
+BRICKS
+======
+épisode 42 : Le test de script!
+---------
+
+Scène 1
+-------
+
+(Ambiance de forêt avec petits oiseaux)
+(Musique de vivaldi, les 4 saisons)
+
+PRESIDENT -- Hello world !
+INGENIEUR -- Whack?
+PRESIDENT, surpris -- c'est quoi whack?
+INGENIEUR, met sa main sur sa figure -- Haaaa, laissez tomber... (se retourne brusquement) hé !!
+GENERAL, pour faire une blague -- héhé, je t'ai pris ton chapeau !
+INGENIEUR, plat -- j'ai pas de chapeau.
+GENERAL -- Ah. Tant pis, c'était juste pour tester le script.
+INGENIEUR+PRESIDENT -- Le script?
+
+(stab)
+
+NARRATEUR -- Bah oui, c'est pour ça que je vous fait dire que de la merde depuis le début, c'est pour que vous produisiez un maximum de texte pour que je puisse voir ce que ça rend ensuite !
+
+(silence)
+(son de corbeau)
+
+TOUS -- Gné??
+
+NARRATEUR, blasé -- Bon. Oubliez ce que je viens de dire.
+
+(musique de fin de Kaamelot)
+
+Scène 2 : explication
+-------
+
+/*
+Pour résumer:
+
+Les lignes dont le texte commence par "(" et se finissent par ")" sont des indications.
+
+Les lignes contenant un "--" sont des répliques.
+Le texte de la partie gauche est le nom du personnage, ainsi qu'une didascalie que l'on peut ajouter avec une ",".
+La partie droite est la réplique, qui se termine au prochain retour à la ligne manuel.
+
+Les répliques dont le personnage s'appelle "TOUS" est reconnue comme prononçée par tous les personnages présents dans la scène,
+en dehors des personnages spéciaux tels que le "NARRATEUR".
+Il est possible de soustraire des personnages en ajoutant "-" suivi du nom d'un personnage.
+Pour seulement quelques personnages ou en ajouter simplement, "+" peut être utilisé.
+
+Les lignes qui ne sont ni des indications, ni des répliques, sont des titres de scène.
+
+Les lignes entourées par / * * / ou // sont des notes de production.
+
+Les lignes entourées par / ** et ** / ou /// sont des notes de documentation.
+L'intérieur de ces notes est divisé en sections dont le titre est encadré avec [].
+Les lignes commençant par un mot et ':' sont des champs. Tout ce qui suit est le même champ à moins
+de rencontrer une balise vue précédemment.
+Pour fermer un champ manuellement, utiliser '--'.
+Le champ par défaut est "Description".
+Les tabulations sont échappées automatiquement.
+
+Les mots-clés utilisés en tant que champs comme "Sexe:", "Personnages:" ou encore "Age:" etc sont reconnues.
+
+*/
+
+
