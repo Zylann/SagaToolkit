@@ -93,6 +93,9 @@ class Statement:
 		self.note = ""
 		self.text = ""
 		self.scene = scene
+		# Optional flag indicating wether this statement has already been
+		# recorded by the actor or not
+		self.checked = False
 
 	def get_character():
 		return self.scene.episode.saga.get_character(self.characterName)
@@ -260,6 +263,7 @@ class MDParser:
 	def parse_statement(self):
 		statement = self.scene.create_statement()
 
+		# A statement is a series of lines until the next blank line or other element
 		line = self.lines[self.i]
 		self.next_line()
 
@@ -295,6 +299,12 @@ class MDParser:
 			self.next_line()
 			if line.startswith("*/") or line.endswith("*/"):
 				return
+
+
+# ------------------------------------------------------------------------------
+# Tests if a file can be assumed to contain the script for one episode 
+def is_episode_filename(filename):
+	return filename.contains("episode")
 
 
 # ------------------------------------------------------------------------------
