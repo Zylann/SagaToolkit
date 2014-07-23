@@ -86,13 +86,20 @@ class Scene:
 
 
 # ------------------------------------------------------------------------------
-class Statement:
+class SceneElement:
 
 	def __init__(self, scene=None):
-		self.characterName = ""
 		self.note = ""
-		self.text = ""
 		self.scene = scene
+
+
+# ------------------------------------------------------------------------------
+class Statement(SceneElement):
+
+	def __init__(self, scene=None):
+		super().__init__(self, scene)
+		self.characterName = ""
+		self.text = ""
 
 	def get_character():
 		return self.scene.episode.saga.get_character(self.characterName)
