@@ -6,6 +6,7 @@
 
 import sys
 import os
+import re
 
 
 # ------------------------------------------------------------------------------
@@ -77,19 +78,23 @@ class Scene:
 	def __init__(self, episode=None):
 		self.title = ""
 		self.episode = episode
-		self.statements = []
+		self.elements = []
+
+	def create_element(self):
+		e = SceneElement(self)
+		self.elements.append(e)
+		return e
 
 	def create_statement(self):
 		s = Statement(self)
-		self.statements.append(s)
+		self.elements.append(s)
 		return s
-
 
 # ------------------------------------------------------------------------------
 class SceneElement:
 
 	def __init__(self, scene=None):
-		self.note = ""
+		self.text = ""
 		self.scene = scene
 
 
@@ -97,8 +102,12 @@ class SceneElement:
 class Statement(SceneElement):
 
 	def __init__(self, scene=None):
-		super().__init__(self, scene)
+		super().__init__(scene)
 		self.characterName = ""
+		self.note = ""
+		# Optional flag indicating wether this statement has already been
+		# recorded by the actor or not
+		self.checked = False
 		self.text = ""
 
 	def get_character():
@@ -124,10 +133,12 @@ class HtmlExporter:
 		# Templates
 		self.statementTemplate = ""
 		self.rootTemplate = ""
+		self.standaloneNoteTemplate = ""
 
 	def load_templates(self, templateFolderPath):
 		self.statementTemplate = read_all_file(os.path.join(templateFolderPath, "statement.html"))
 		self.rootTemplate = read_all_file(os.path.join(templateFolderPath, "root.html"))
+		self.standaloneNoteTemplate = read_all_file(os.path.join(templateFolderPath, "standalone_note.html"))
 
 	def export(self, saga, destinationFolderPath):
 		self.load_templates(os.path.join("Templates", "Default"))
@@ -149,14 +160,18 @@ class HtmlExporter:
 			sceneTitle = scene.title or "Untitled scene"
 			content += "<h2>{0}</h2>\n".format(sceneTitle)
 
-			for statement in scene.statements:
+			for e in scene.elements:
 
-				headNote = ""
-				if len(statement.note) != 0:
-					headNote = "<span class=\"note\"> {0}</span>".format(statement.note);
+				if type(e).__name__ == "Statement":
+					headNote = ""
+					if len(e.note) != 0:
+						headNote = "<span class=\"note\"> {0}</span>".format(e.note);
 
-				statementBlock = self.statementTemplate.format(statement.characterName, headNote, statement.text)
-				content += statementBlock;
+					statementBlock = self.statementTemplate.format(e.characterName, headNote, e.text)
+					content += statementBlock;
+
+				else:
+					content += self.standaloneNoteTemplate.format(e.note)
 
 		title = episode.title or "Untitled episode"
 		fullOutput = self.rootTemplate.replace("{title}", title).replace("{content}", content)
@@ -172,6 +187,15 @@ class HtmlExporter:
 # customized to better respond to the needs of an audio play script.
 class MDParser:
 
+	# A note starts with < or ( and ends with > or ).
+	regex_standalone_note = re.compile("^\(.*\)$|^<.*>$")
+	# A character statement has a double "--" in it, but doesn't starts or end with it.
+	regex_statement = re.compile(".+--.+")
+	# An h1 is underlined by 3 or more equal symbols, and only that.
+	regex_heading1 = re.compile("^==+=$")
+	# An h2 is underlined by 3 or more dashes, and only that.
+	regex_heading2 = re.compile("^--+-$")
+
 	def __init__(self):
 		self.lines = []
 		# Current line index
@@ -180,6 +204,17 @@ class MDParser:
 		self.saga = None
 		self.episode = None
 		self.scene = None
+
+	def test():
+		print("Match tests:")
+		print("Note:")
+		c = __class__
+		print(c.regex_standalone_note.match("(this is a note)"))
+		print(c.regex_standalone_note.match("<this is a note>"))
+		print(c.regex_standalone_note.match("(this is not a note"))
+		print(c.regex_standalone_note.match("this is not a note)"))
+		print(c.regex_standalone_note.match("<this is a weird note)"))
+
 
 	def parse_file(self, sourceFilePath):
 		print("Parsing file {0}...".format(sourceFilePath))
@@ -243,7 +278,7 @@ class MDParser:
 							self.scene = self.episode.create_scene()
 							self.scene.title = previousLine
 
-			if line[0] == '(':
+			if line[0] == '(' or line[0] == '<' or line[0] == '[':
 				self.parse_standalone_note()
 				continue
 
@@ -255,18 +290,21 @@ class MDParser:
 
 
 	def parse_standalone_note(self):
-		self.next_line()
-		# TODO
-		# while self.i < len(self.lines):
-		# 	line = self.lines[self.i].strip()
-		# 	self.i += 1
+		while self.i < len(self.lines):
+			line = self.lines[self.i].strip()
+			self.next_line()
 
-		# 	if len(line) == 0 or line.find(")") != -1:
-		# 		return
+			elem = self.scene.create_element()
+			elem.note = line
+			#TODO better strip the note
+
+			if len(line) == 0 or line.find(")") or line.find(">") or line.find("]") != -1:
+				return
 
 	def parse_statement(self):
 		statement = self.scene.create_statement()
 
+		# A statement is a series of lines until the next blank line or other element
 		line = self.lines[self.i]
 		self.next_line()
 
@@ -305,6 +343,12 @@ class MDParser:
 
 
 # ------------------------------------------------------------------------------
+# Tests if a file can be assumed to contain the script for one episode 
+def is_episode_filename(filename):
+	return filename.contains("episode")
+
+
+# ------------------------------------------------------------------------------
 def print_usage():
 	print("Usage: \n")
 	print("stk.py <sourceFile> <destinationFolder>")
@@ -316,10 +360,24 @@ def read_all_file(src):
 		content = content_file.read()
 	return content
 
+# ------------------------------------------------------------------------------
+def test():
+	MDParser.test()
+
 
 # ------------------------------------------------------------------------------
 def cli_main():
-	if len(sys.argv) == 3:
+	if sys.version_info[0] < 3:
+		print("STK needs Python 3.x to run. Check your execution path and file associations.")
+		print("Your Python version is: ")
+		print(sys.version)
+		return
+
+	if len(sys.argv) == 2:
+		if sys.argv[1] == "--test":
+			test()
+
+	elif len(sys.argv) == 3:
 		parser = MDParser()
 		parser.parse_file(sys.argv[1])
 		exporter = HtmlExporter()
