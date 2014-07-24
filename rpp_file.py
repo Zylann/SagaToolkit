@@ -20,14 +20,14 @@ class RppNode:
 		child.parent = self
 		return child
 
-	def get_nodes_by_tag(name):
+	def get_nodes_by_tag(self, name):
 		nodes = []
 		for n in self.children:
 			if n.name == name:
-				tracks.append(n)
-		return tracks
+				nodes.append(n)
+		return nodes
 
-	def get_node_by_tag(name):
+	def get_node_by_tag(self, name):
 		for n in self.children:
 			if n.name == name:
 				return n
@@ -102,16 +102,4 @@ def write_rpp_node_values(f, node):
 			f.write(" " + str(v))
 	f.write('\n')
 
-#-------------------------------------------------------------------------------
-def test():
-	# fileName = "Milhana_ep5_scene5_t02.RPP"
-	fileName = "empty.RPP"
-	dirPath = os.path.join("TestData", "Reaper")
-	root = parse_rpp_file(os.path.join(dirPath, fileName))
-	write_rpp_file(os.path.join(dirPath, "exportTest.RPP"), root)
-
-
-#-------------------------------------------------------------------------------
-if __name__ == "__main__":
-	test()
 

@@ -360,10 +360,6 @@ def read_all_file(src):
 		content = content_file.read()
 	return content
 
-# ------------------------------------------------------------------------------
-def test():
-	MDParser.test()
-
 
 # ------------------------------------------------------------------------------
 def cli_main():
@@ -375,7 +371,8 @@ def cli_main():
 
 	if len(sys.argv) == 2:
 		if sys.argv[1] == "--test":
-			test()
+			import test
+			test.test(sys.argv[2:])
 
 	elif len(sys.argv) == 3:
 		parser = MDParser()

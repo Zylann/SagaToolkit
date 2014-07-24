@@ -1,2 +1,2 @@
-python.exe stk.py Example/Episode1.txt Example
+python.exe stk.py --test
 pause
