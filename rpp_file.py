@@ -20,6 +20,18 @@ class RppNode:
 		child.parent = self
 		return child
 
+	def get_nodes_by_tag(name):
+		nodes = []
+		for n in self.children:
+			if n.name == name:
+				tracks.append(n)
+		return tracks
+
+	def get_node_by_tag(name):
+		for n in self.children:
+			if n.name == name:
+				return n
+		return None
 
 #-------------------------------------------------------------------------------
 def parse_rpp_file(filePath):
