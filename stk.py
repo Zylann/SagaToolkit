@@ -162,7 +162,7 @@ class HtmlExporter:
 
 			for e in scene.elements:
 
-				if type(e).__name__ == "Statement":
+				if type(e) == Statement:
 					headNote = ""
 					if len(e.note) != 0:
 						headNote = "<span class=\"note\"> {0}</span>".format(e.note);

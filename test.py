@@ -6,11 +6,13 @@ import daw
 
 
 def test_rpp_file():
-	# fileName = "Milhana_ep5_scene5_t02.RPP"
 	fileName = "empty.RPP"
 	dirPath = os.path.join("TestData", "Reaper")
-	root = parse_rpp_file(os.path.join(dirPath, fileName))
-	write_rpp_file(os.path.join(dirPath, "exportTest.RPP"), root)
+	print("Read...")
+	root = rpp_file.parse_rpp_file(os.path.join(dirPath, fileName))
+	print("Write...")
+	rpp_file.write_rpp_file(os.path.join(dirPath, "exportTest.RPP"), root)
+	print("Done.")
 
 
 def test_daw():
@@ -20,7 +22,14 @@ def test_daw():
 			print(item.sourceFile)
 
 
+def test_parse_values():
+	print(rpp_file.parse_values("ZXZhdxAA"))
+	print(rpp_file.parse_values("1 2.5 3"))
+	print(rpp_file.parse_values("1 2 \"3a b\""))
+
+
 def test(argv):
-	test_daw()
+	test_rpp_file()
+	#test_parse_values()
 
 
