@@ -269,15 +269,19 @@ class MDParser:
 				if len(previous_line) != 0:
 
 					if len(self.saga.title) == 0 and line.startswith("==="):
+						print("Saga title is:", previous_line)
 						self.saga.title = previous_line
+
+					if len(self.episode.title) == 0:
+						self.episode.title = previous_line
 
 					elif line.startswith("---"):
 						is_heading = True
 
-						if len(self.episode.title) == 0:
-							self.episode.title = previous_line
+						# if len(self.episode.title) == 0:
+						# 	self.episode.title = previous_line
 
-						elif len(self.scene.title) == 0:
+						if len(self.scene.title) == 0:
 							self.scene.title = previous_line
 
 						else:
@@ -385,8 +389,6 @@ def cli_main():
 
 			input_file = sys.argv[2]
 			output_dir = sys.argv[3]
-			print("In:", input_file)
-			print("Out:", output_dir)
 
 			parser = MDParser()
 			parser.parse_file(input_file)
