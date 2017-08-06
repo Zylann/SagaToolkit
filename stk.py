@@ -138,11 +138,13 @@ class HtmlExporter:
 		self.statement_template = ""
 		self.root_template = ""
 		self.standalone_note_template = ""
+		self.scenelist_template = ""
 
 	def load_templates(self, template_folder_path):
 		self.statement_template = read_all_file(os.path.join(template_folder_path, "statement.html"))
 		self.root_template = read_all_file(os.path.join(template_folder_path, "root.html"))
 		self.standalone_note_template = read_all_file(os.path.join(template_folder_path, "standalone_note.html"))
+		self.scenelist_template = read_all_file(os.path.join(template_folder_path, "scenelist.html"))
 
 	def export(self, saga, destination_folder_path):
 		self.load_templates(os.path.join("templates", "Default"))
@@ -159,10 +161,15 @@ class HtmlExporter:
 
 		# TODO write a better, optimized template system (more like Django?)
 
+		content += self._generate_table_of_contents(episode)
+
+		scene_index = 0
+
 		for scene in episode.scenes:
 
 			scene_title = scene.title or "Untitled scene"
-			content += "<h2>{0}</h2>\n".format(scene_title)
+			scene_id = self._make_scene_id(scene_index)
+			content += "<h2 id=\"{0}\">{1}</h2>\n".format(scene_id, scene_title)
 
 			for e in scene.elements:
 
@@ -180,6 +187,8 @@ class HtmlExporter:
 					formatted = self.standalone_note_template.format(self._html_chars(e.text))
 					content += formatted
 
+			scene_index += 1
+
 		title = episode.title or "Untitled episode"
 		full_output = self.root_template.replace("{title}", title).replace("{content}", content)
 
@@ -188,6 +197,23 @@ class HtmlExporter:
 		o.write(full_output)
 		o.close()
 
+
+	def _generate_table_of_contents(self, episode):
+		content = "<ul>\n"
+		scene_index = 0
+
+		for scene in episode.scenes:
+			scene_title = scene.title or "Untitled scene"
+			scene_id = self._make_scene_id(scene_index)
+			content += '<li><a href="#{0}">{1}</a></li>\n'.format(scene_id, scene_title)
+			scene_index += 1
+
+		content += "</ul>\n"
+
+		return self.scenelist_template.replace("{content}", content)
+
+	def _make_scene_id(self, index):
+		return "scene" + str(index)
 
 	def _html_chars(self, s):
 		# Convert characters so they are HTML-compliant...
