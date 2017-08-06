@@ -74,6 +74,7 @@
 	<script id="interaction">
 
 		var statements = [];
+		var currentHighlight = "";
 
 
 		function Statement(statementHTML) {
@@ -128,7 +129,13 @@
 		function onCharBlockClicked() {
 			var block = this;
 			var characterName = getCharacterName(block);
-			highlightCharacter(characterName);
+			if(characterName == currentHighlight) {
+				// Toggle highlighting
+				currentHighlight = "";
+			} else {
+				currentHighlight = characterName
+			}
+			highlightCharacter(currentHighlight);
 		}
 
 	</script>
