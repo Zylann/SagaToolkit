@@ -7,7 +7,8 @@
 import sys
 import os
 import re
-
+# For HTML escaping
+import cgi
 
 # ------------------------------------------------------------------------------
 class Actor:
@@ -168,13 +169,16 @@ class HtmlExporter:
 				if type(e) == Statement:
 					head_note = ""
 					if len(e.note) != 0:
-						head_note = "<span class=\"note\"> {0}</span>".format(e.note);
+						head_note = "<span class=\"note\">, {0}</span>".format(self._html_chars(e.note))
 
-					statement_block = self.statement_template.format(e.character_name, head_note, e.text)
+					statement_block = self.statement_template.format(self._html_chars(e.character_name), \
+																	 head_note, \
+																	 self._html_chars(e.text))
 					content += statement_block;
 
 				else:
-					content += self.standalone_note_template.format(e.text)
+					formatted = self.standalone_note_template.format(self._html_chars(e.text))
+					content += formatted
 
 		title = episode.title or "Untitled episode"
 		full_output = self.root_template.replace("{title}", title).replace("{content}", content)
@@ -183,6 +187,12 @@ class HtmlExporter:
 		o = open(dst, "w+")
 		o.write(full_output)
 		o.close()
+
+
+	def _html_chars(self, s):
+		# Convert characters so they are HTML-compliant...
+		return cgi.escape(s)
+		#return s.replace("<", "&lt;").replace(">", "&gt;")
 
 
 # ------------------------------------------------------------------------------
