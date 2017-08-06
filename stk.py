@@ -25,7 +25,7 @@ class Saga:
 		self.title = ""
 		self.episodes = []
 		self.characters = {}
-		self.characterAliases = {}
+		self.character_aliases = {}
 		self.actors = []
 
 	def create_episode(self):
@@ -33,10 +33,10 @@ class Saga:
 		self.episodes.append(episode)
 		return episode
 
-	def get_character(nameOrAlias):
-		name = nameOrAlias
+	def get_character(self, name_or_alias):
+		name = name_or_alias
 		try:
-			name = self.characterAliases[nameOrAlias]
+			name = self.character_aliases[name_or_alias]
 		except KeyError:
 			pass
 		return self.characters[name]
@@ -62,7 +62,7 @@ class Episode:
 		self.number = 0
 
 		# Scene indexes at which a part starts (used for big, split episodes).
-		self.partIndexes = [0]
+		self.part_indexes = [0]
 
 	def create_scene(self):
 		scene = Scene(self)
@@ -103,15 +103,18 @@ class Statement(SceneElement):
 
 	def __init__(self, scene=None):
 		super().__init__(scene)
-		self.characterName = ""
+		# Who speaks (can be an alias)
+		self.character_name = ""
+		# Note about mood, intonation etc
 		self.note = ""
 		# Optional flag indicating wether this statement has already been
 		# recorded by the actor or not
-		self.checked = False
+		self.recorded_by_actor = False
+		# Actual text
 		self.text = ""
 
-	def get_character():
-		return self.scene.episode.saga.get_character(self.characterName)
+	def get_character(self):
+		return self.scene.episode.saga.get_character(self.character_name)
 
 
 # ------------------------------------------------------------------------------
@@ -123,7 +126,7 @@ class Character:
 		self.gender = "N"
 		self.saga = saga
 		# Main actor name
-		self.actorName = ""
+		self.actor_name = ""
 
 
 # ------------------------------------------------------------------------------
@@ -131,54 +134,54 @@ class HtmlExporter:
 
 	def __init__(self):
 		# Templates
-		self.statementTemplate = ""
-		self.rootTemplate = ""
-		self.standaloneNoteTemplate = ""
+		self.statement_template = ""
+		self.root_template = ""
+		self.standalone_note_template = ""
 
-	def load_templates(self, templateFolderPath):
-		self.statementTemplate = read_all_file(os.path.join(templateFolderPath, "statement.html"))
-		self.rootTemplate = read_all_file(os.path.join(templateFolderPath, "root.html"))
-		self.standaloneNoteTemplate = read_all_file(os.path.join(templateFolderPath, "standalone_note.html"))
+	def load_templates(self, template_folder_path):
+		self.statement_template = read_all_file(os.path.join(template_folder_path, "statement.html"))
+		self.root_template = read_all_file(os.path.join(template_folder_path, "root.html"))
+		self.standalone_note_template = read_all_file(os.path.join(template_folder_path, "standalone_note.html"))
 
-	def export(self, saga, destinationFolderPath):
-		self.load_templates(os.path.join("Templates", "Default"))
+	def export(self, saga, destination_folder_path):
+		self.load_templates(os.path.join("templates", "Default"))
 
 		print("Exporting saga...")
 
 		for episode in saga.episodes:
-			self.export_episode(episode, destinationFolderPath)
+			self.export_episode(episode, destination_folder_path)
 
 		print("Done.")
 
-	def export_episode(self, episode, destinationFolderPath):
+	def export_episode(self, episode, destination_folder_path):
 		content = ""
 
 		# TODO write a better, optimized template system (more like Django?)
 
 		for scene in episode.scenes:
 
-			sceneTitle = scene.title or "Untitled scene"
-			content += "<h2>{0}</h2>\n".format(sceneTitle)
+			scene_title = scene.title or "Untitled scene"
+			content += "<h2>{0}</h2>\n".format(scene_title)
 
 			for e in scene.elements:
 
 				if type(e) == Statement:
-					headNote = ""
+					head_note = ""
 					if len(e.note) != 0:
-						headNote = "<span class=\"note\"> {0}</span>".format(e.note);
+						head_note = "<span class=\"note\"> {0}</span>".format(e.note);
 
-					statementBlock = self.statementTemplate.format(e.characterName, headNote, e.text)
-					content += statementBlock;
+					statement_block = self.statement_template.format(e.character_name, head_note, e.text)
+					content += statement_block;
 
 				else:
-					content += self.standaloneNoteTemplate.format(e.note)
+					content += self.standalone_note_template.format(e.text)
 
 		title = episode.title or "Untitled episode"
-		fullOutput = self.rootTemplate.replace("{title}", title).replace("{content}", content)
+		full_output = self.root_template.replace("{title}", title).replace("{content}", content)
 
-		dst = os.path.join(destinationFolderPath, "{0}.html".format(episode.filename))
+		dst = os.path.join(destination_folder_path, "{0}.html".format(episode.filename))
 		o = open(dst, "w+")
-		o.write(fullOutput)
+		o.write(full_output)
 		o.close()
 
 
@@ -199,7 +202,7 @@ class MDParser:
 	def __init__(self):
 		self.lines = []
 		# Current line index
-		self.i = 0
+		self.line_index = 0
 		# Parsed saga state
 		self.saga = None
 		self.episode = None
@@ -216,35 +219,36 @@ class MDParser:
 		print(c.regex_standalone_note.match("<this is a weird note)"))
 
 
-	def parse_file(self, sourceFilePath):
-		print("Parsing file {0}...".format(sourceFilePath))
+	def parse_file(self, source_file_path):
+		print("Parsing file {0}...".format(source_file_path))
 
 		if self.saga == None:
 			self.saga = Saga()
 			self.episode = self.saga.create_episode()
-			self.episode.filename = os.path.splitext(os.path.basename(sourceFilePath))[0]
+			self.episode.filename = os.path.splitext(os.path.basename(source_file_path))[0]
 			self.scene = self.episode.create_scene()
 
-		f = open(sourceFilePath)
+		# TODO Use `with`
+		f = open(source_file_path)
 		self.lines = f.readlines()
 		f.close()
 
-		self.i = 0
+		self.line_index = 0
 		self.parse_lines()
 
 		print("Done")
 
 	def next_line(self):
-		self.i += 1
+		self.line_index += 1
 
 	def parse_lines(self):
 
-		while self.i < len(self.lines):
-			line = self.lines[self.i].strip()
+		while self.line_index < len(self.lines):
+			line = self.lines[self.line_index].strip()
 
 			# Print progress
-			#progress = math.floor(100.0 * self.i / len(self.lines))
-			#print("{0}".format(self.i))
+			#progress = math.floor(100.0 * self.line_index / len(self.lines))
+			#print("{0}".format(self.line_index))
 
 			if len(line) == 0:
 				self.next_line()
@@ -254,35 +258,37 @@ class MDParser:
 				self.parse_comment()
 				continue
 
-			isHeading = False
+			is_heading = False
 
-			if self.i > 0:
+			# TODO Headings should be able to contain anything as long as they are followed by ---- or ====,
+			# Fix the case where they are detected as statements! Need to do a look-ahead instead
+			if self.line_index > 0:
 
-				previousLine = self.lines[self.i-1].strip()
+				previous_line = self.lines[self.line_index-1].strip()
 
-				if len(previousLine) != 0:
+				if len(previous_line) != 0:
 
 					if len(self.saga.title) == 0 and line.startswith("==="):
-						self.saga.title = previousLine
+						self.saga.title = previous_line
 
 					elif line.startswith("---"):
-						isHeading = True
+						is_heading = True
 
 						if len(self.episode.title) == 0:
-							self.episode.title = previousLine
+							self.episode.title = previous_line
 
 						elif len(self.scene.title) == 0:
-							self.scene.title = previousLine
+							self.scene.title = previous_line
 
 						else:
 							self.scene = self.episode.create_scene()
-							self.scene.title = previousLine
+							self.scene.title = previous_line
 
 			if line[0] == '(' or line[0] == '<' or line[0] == '[':
 				self.parse_standalone_note()
 				continue
 
-			if (not isHeading) and line.find("--") > 0:
+			if (not is_heading) and line.find("--") > 0:
 				self.parse_statement()
 				continue
 
@@ -290,12 +296,12 @@ class MDParser:
 
 
 	def parse_standalone_note(self):
-		while self.i < len(self.lines):
-			line = self.lines[self.i].strip()
+		while self.line_index < len(self.lines):
+			line = self.lines[self.line_index].strip()
 			self.next_line()
 
 			elem = self.scene.create_element()
-			elem.note = line
+			elem.text = line
 			#TODO better strip the note
 
 			if len(line) == 0 or line.find(")") or line.find(">") or line.find("]") != -1:
@@ -305,38 +311,38 @@ class MDParser:
 		statement = self.scene.create_statement()
 
 		# A statement is a series of lines until the next blank line or other element
-		line = self.lines[self.i]
+		line = self.lines[self.line_index]
 		self.next_line()
 
-		charName = ""
-		charHeadNote = ""
-		statementText = ""
+		char_name = ""
+		char_head_note = ""
+		statement_text = ""
 
-		statementHead, statementText = line.split("--", 1)
+		statement_head, statement_text = line.split("--", 1)
 
 		# Parse charHead
-		commaIndex = statementHead.find(",")
-		if commaIndex != -1:
-			charName, charHeadNote = statementHead[0:commaIndex], statementHead[commaIndex+1:]
+		comma_index = statement_head.find(",")
+		if comma_index != -1:
+			char_name, char_head_note = statement_head[0:comma_index], statement_head[comma_index+1:]
 		else:
-			charName = statementHead.strip()
+			char_name = statement_head.strip()
 
-		while self.i < len(self.lines):
-			line = self.lines[self.i].strip()
+		while self.line_index < len(self.lines):
+			line = self.lines[self.line_index].strip()
 			if len(line) == 0 or line.find("--") > 0:
 				break
 			else:
-				statementText += line
+				statement_text += line
 				self.next_line()
 
-		statement.characterName = charName
-		statement.note = charHeadNote
-		statement.text = statementText
+		statement.character_name = char_name
+		statement.note = char_head_note
+		statement.text = statement_text
 
 
 	def parse_comment(self):
-		while self.i < len(self.lines):
-			line = self.lines[self.i].strip()
+		while self.line_index < len(self.lines):
+			line = self.lines[self.line_index].strip()
 			self.next_line()
 			if line.startswith("*/") or line.endswith("*/"):
 				return
@@ -345,6 +351,7 @@ class MDParser:
 # ------------------------------------------------------------------------------
 # Tests if a file can be assumed to contain the script for one episode 
 def is_episode_filename(filename):
+	filename = filename.lower()
 	return filename.contains("episode")
 
 
@@ -369,23 +376,36 @@ def cli_main():
 		print(sys.version)
 		return
 
-	if len(sys.argv) == 2:
+	if len(sys.argv) >= 2:
 		if sys.argv[1] == "--test":
 			import test
 			test.test(sys.argv[2:])
 
-	elif len(sys.argv) == 3:
-		parser = MDParser()
-		parser.parse_file(sys.argv[1])
-		exporter = HtmlExporter()
-		exporter.export(parser.saga, sys.argv[2])
+		elif sys.argv[1] == "--markdown2html" and len(sys.argv) == 4:
 
+			input_file = sys.argv[2]
+			output_dir = sys.argv[3]
+			print("In:", input_file)
+			print("Out:", output_dir)
+
+			parser = MDParser()
+			parser.parse_file(input_file)
+
+			exporter = HtmlExporter()
+			exporter.export(parser.saga, output_dir)
+
+		elif sys.argv[1] == "--generate_ep_card" and len(sys.argv) == 4:
+			#generate_episode_card(sys.argv[2], sys.argv[3])
+			#TODO generate_episode_card
+			print("Not implemented yet...")
+
+		else:
+			print_usage()
 	else:
 		print_usage()
 
 
 # ------------------------------------------------------------------------------
-
 if __name__ == '__main__':
 	cli_main()
 
