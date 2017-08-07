@@ -1,7 +1,7 @@
 # -*-coding:Utf-8 -*
 # ------------------------------------------------------------------------------
 # Saga toolkit entry point file
-# Author: Marc Gilleron <marc.gilleron@gmail.com>
+# Author: Marc Gilleron (aka Zylann)
 # ------------------------------------------------------------------------------
 
 import sys
@@ -226,6 +226,7 @@ class HtmlExporter:
 # customized to better respond to the needs of an audio play script.
 class MDParser:
 
+	# Note: these regexes are... actually not used^^ I keep them for future reference
 	# A note starts with < or ( and ends with > or ).
 	regex_standalone_note = re.compile("^\(.*\)$|^<.*>$")
 	# A character statement has a double "--" in it, but doesn't starts or end with it.
@@ -280,6 +281,7 @@ class MDParser:
 	def parse_lines(self):
 
 		while self.line_index < len(self.lines):
+
 			line = self.lines[self.line_index].strip()
 
 			# Print progress
@@ -294,41 +296,49 @@ class MDParser:
 				self.parse_comment()
 				continue
 
-			is_heading = False
+			# Look-ahead parsing
+			if self.line_index + 1 < len(self.lines):
 
-			# TODO Headings should be able to contain anything as long as they are followed by ---- or ====,
-			# Fix the case where they are detected as statements! Need to do a look-ahead instead
-			if self.line_index > 0:
+				next_line = self.lines[self.line_index + 1].strip()
 
-				previous_line = self.lines[self.line_index-1].strip()
+				# Header 1
+				if next_line.startswith("==="):
 
-				if len(previous_line) != 0:
-
-					if len(self.saga.title) == 0 and line.startswith("==="):
-						print("Saga title is:", previous_line)
-						self.saga.title = previous_line
+					if len(self.saga.title) == 0:
+						print("Saga title is:", line)
+						self.saga.title = line
 
 					if len(self.episode.title) == 0:
-						self.episode.title = previous_line
+						self.episode.title = line
 
-					elif line.startswith("---"):
-						is_heading = True
+					self.next_line()
+					self.next_line()
+					continue
 
-						# if len(self.episode.title) == 0:
-						# 	self.episode.title = previous_line
+				# Header 2
+				elif next_line.startswith("---"):
 
-						if len(self.scene.title) == 0:
-							self.scene.title = previous_line
+					# if len(self.episode.title) == 0:
+					# 	self.episode.title = line
 
-						else:
-							self.scene = self.episode.create_scene()
-							self.scene.title = previous_line
+					if len(self.scene.title) == 0:
+						self.scene.title = line
 
+					else:
+						self.scene = self.episode.create_scene()
+						self.scene.title = line
+
+					self.next_line()
+					self.next_line()
+					continue
+
+			# Note
 			if line[0] == '(' or line[0] == '<' or line[0] == '[':
 				self.parse_standalone_note()
 				continue
 
-			if (not is_heading) and line.find("--") > 0:
+			# Statement
+			if line.find("--") > 0:
 				self.parse_statement()
 				continue
 
