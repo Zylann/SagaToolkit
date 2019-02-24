@@ -3,6 +3,8 @@ Saga Toolkit
 
 SagaTK is a set of tools for audio plays production.
 
+**Superseded by https://github.com/Zylann/saga_toolkit_app**
+
 
 Warning
 ------------
